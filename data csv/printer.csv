@@ -1,0 +1,5 @@
+﻿asset_code,name,nickname,department_id,status,description,asset_type_id,price,buy_date,brand,model,type,cpu_type,cpu_name,ram,ram_memory,mainboard_name,mainboard_model,ssd,ssd_model,hdd,hdd_model,gpu,powersupply,os,check_date,create_account
+PT-001,,,12,ปกติ,,8,,,EPSON,,,,,,,,,,,,,,,,,
+PT-003,,,11,ปกติ,,8,,,,,,,,,,,,,,,,,,,,
+PT-005,นางสาวอัจฉราพร เภาพูล,แนน,15,ปกติ,,8,,,,,,,,,,,,,,,,,,,,
+PT-007,,,14,ปกติ,,8,,,CANON,E410,,,,,,,,,,,,,,,,

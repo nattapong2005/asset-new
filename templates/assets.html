@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ระบบเก็บทรัพย์สิน</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='lib/datatables/dataTables.min.css') }}" />
+    <script src="{{ url_for('static', filename='lib/jquery/jquery-3.7.1.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='lib/datatables/dataTables.min.js') }}"></script>
+    <style>
+      .sidebar {
+        transition: all 0.3s ease;
+        transform: translateX(0);
+      }
+
+      .sidebar.collapsed {
+        transform: translateX(-90%);
+      }
+
+      .dropdown-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+      }
+
+      .dropdown.active .dropdown-content {
+        max-height: 500px;
+      }
+
+      .dropdown-arrow {
+        transition: transform 0.3s ease;
+      }
+
+      .dropdown.active .dropdown-arrow {
+        transform: rotate(180deg);
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+          position: fixed;
+          z-index: 50;
+          height: 100vh;
+        }
+
+        .sidebar.active {
+          transform: translateX(0);
+        }
+
+        .overlay {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          z-index: 40;
+        }
+
+        .overlay.active {
+          display: block;
+        }
+      }
+      body {
+        color: white !important;
+      }
+    </style>
+  </head>
+  <body class="">
+    <div class="flex">
+      <!-- Sidebar -->
+      <aside class="sidebar bg-gray-800 text-white w-64 flex-shrink-0 flex flex-col">
+        <!-- Sidebar Header -->
+        <div class="flex items-center justify-center border-b border-gray-700">
+          <div class="flex items-center">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" width="170" />
+            <!-- <i class="fas fa-rocket text-2xl text-gray-300"></i> -->
+            <!-- <span class="text-xl text-red-500 font-bold mt-5">MASARU</span> -->
+          </div>
+          <button id="toggleSidebar" class="md:hidden text-white">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="flex-1">
+          <nav class="p-4 space-y-1">
+            <a
+              href="{{ url_for('dashboard') }}"
+              class="flex items-center p-3 rounded-lg text-white {% if request.path == '/dashboard' %}active{% endif %}"
+            >
+              <i class="fas fa-home mr-3"></i>
+              <span>หน้าหลัก</span>
+            </a>
+            <a href="{{ url_for('assets') }}" class="flex items-center p-3 rounded-lg {% if request.path == '/assets' %}active{% endif %}">
+              <i class="fa-solid fa-list mr-3"></i>
+              <span>รายการทรัพย์สิน</span>
+            </a>
+            {% if isAdmin %}
+            <a
+              href="{{ url_for('admin_assets') }}"
+              class="flex items-center p-3 rounded-lg {% if request.path == '/admin/assets' %}active{% endif %}"
+            >
+              <i class="fa-solid fa-lock mr-3"></i>
+              <span>รายการทรัพย์สิน แอดมิน</span>
+            </a>
+            {% endif %}
+          </nav>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="p-4 border-t border-gray-700">
+          <div class="flex items-center">
+            <img src="https://cdn-icons-png.flaticon.com/512/219/219983.png" alt="User" class="w-10 h-10 rounded-full" />
+            <div class="ml-3">
+              <div class="font-medium">{{user.name}} {{user.lastname}}</div>
+              <a href="/logout" class="text-sm text-red-500">ออกจากระบบ</a>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Overlay for mobile -->
+      <div class="overlay"></div>
+
+      <!-- Main Content -->
+      <div class="container mx-auto flex-1 flex flex-col">
+        <!-- Top Navigation -->
+        <header class="">
+          <div class="flex items-center justify-between p-5 sm:p-7">
+            <button id="mobileToggle" class="md:hidden text-gray-600">
+              <i class="fas fa-bars text-xl"></i>
+            </button>
+
+            <h1 class="hidden sm:block text-2xl font-bold text-white mb-3">ระบบเก็บทรัพย์สิน MASARU</h1>
+          </div>
+        </header>
+
+        <!-- Page Content -->
+        <main class="flex-1 p-6">
+          <div class="mx-auto">
+            <h1 class="text-2xl text-white mb-3">รายการทรัพย์สิน</h1>
+
+            <div class="overflow-x-auto bg-gray-800 p-3 sm:p-5 rounded-lg">
+              <div class="flex flex-col space-y-4 md:space-y-0 md:flex-row md:justify-end md:items-center mb-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2">
+                  <form method="GET" action="{{ url_for('search') }}" class="flex flex-wrap items-end gap-2">
+                    <div class="w-full sm:w-auto">
+                      <label for="status" class="block text-white font-medium mb-1">สถานะ</label>
+                      <select
+                        name="query"
+                        id="status"
+                        class="w-full px-3 py-1.5 border border-gray-300 bg-white rounded-md shadow-sm text-gray-800"
+                      >
+                        <option value="">ทั้งหมด</option>
+                        <option value="ปกติ">ปกติ</option>
+                        <option value="สำรอง">สำรอง</option>
+                        <option value="เสีย">เสีย</option>
+                        <option value="หาไม่เจอ">หาไม่เจอ</option>
+                      </select>
+                    </div>
+                    <div class="w-full sm:w-auto">
+                      <button
+                        type="submit"
+                        class="w-full sm:w-auto px-4 py-2 bg-gray-500 text-white rounded-md shadow hover:bg-gray-600 transition cursor-pointer"
+                      >
+                        กรอง
+                      </button>
+                    </div>
+                  </form>
+                  <form method="GET" action="{{ url_for('search') }}" class="flex flex-wrap items-end gap-2">
+                    <div class="w-full sm:w-auto">
+                      <label for="department" class="block text-white font-medium mb-1">แผนก</label>
+                      <select
+                        name="query"
+                        id="department"
+                        class="w-full px-3 py-1.5 border border-gray-300 bg-white rounded-md shadow-sm text-gray-800"
+                      >
+                        <option value="">ทั้งหมด</option>
+                        {% for department in departments %}
+                        <option value="{{ department.name }}">{{ department.name }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="w-full sm:w-auto">
+                      <button
+                        type="submit"
+                        class="w-full sm:w-auto px-4 py-2 bg-gray-500 text-white rounded-md shadow hover:bg-gray-600 transition"
+                      >
+                        กรอง
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table id="assetsTable" class="min-w-full border-collapse">
+                  <thead class="bg-gray-700 text-white">
+                    <tr>
+                      <th class="px-2 sm:px-4 py-2 sm:py-3">รหัสทรัพย์สิน</th>
+                      <th class="px-2 sm:px-4 py-2 sm:py-3">ชื่อ-สกุล</th>
+                      <th class="px-2 sm:px-4 py-2 sm:py-3">แผนก</th>
+                      <th class="px-2 sm:px-4 py-2 sm:py-3">ประเภทอุปกรณ์</th>
+                      <th class="px-2 sm:px-4 py-2 sm:py-3">สถานะ</th>
+                      <th class="px-2 sm:px-4 py-2 sm:py-3">ดำเนินการ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% if assets %} {% for asset in assets %}
+                    <tr class="text-white">
+                      <td class="px-2 sm:px-4 py-2 sm:py-3 hover:bg-gray-700">{{ asset.asset_code }}</td>
+                      <td class="px-2 sm:px-4 py-2 sm:py-3">
+                        {{ asset.name or "" }} {% if asset.nickname %} ({{ asset.nickname }}) {% endif %}
+                      </td>
+
+                      <td class="px-2 sm:px-4 py-2 sm:py-3">{{ asset.department.name if asset.department else "-" }}</td>
+                      <td class="px-2 sm:px-4 py-2 sm:py-3">{{ asset.asset_type.name if asset.asset_type else "-" }}</td>
+                      <td class="px-2 sm:px-4 py-2 sm:py-3">
+                        <span
+                          class="inline-block px-2 sm:px-5 py-0.5 rounded-md {% if asset.status == 'ปกติ' %} bg-green-600 {% elif asset.status == 'เสีย' %} bg-gray-500 {% elif asset.status == 'สำรอง' %} bg-yellow-500 {% elif asset.status == 'หาไม่เจอ' %} bg-red-600 {% else %} bg-gray-700 {% endif %}"
+                        >
+                          {{ asset.status }}
+                        </span>
+                      </td>
+                      <td class="px-2 sm:px-4 py-2 sm:py-3">
+                        <a href="/assets/view/{{ asset.asset_id }}" class="block px-4 py-2 text-sm text-gray-300">
+                          <i class="fa-solid fa-eye mr-2"></i>
+                        </a>
+                      </td>
+                    </tr>
+                    {% endfor %} {% else %}
+                    <!-- <tr>
+                      <td colspan="6" class=" py-4">ไม่พบทรัพย์สินที่ค้นหา</td>
+                    </tr> -->
+                    {% endif %}
+                  </tbody>
+                </table>
+              </div>
+              <!-- <div class="flex justify-end mt-4">
+                <a class="bg-red-700 px-5 py-1 rounded-md back-button text-white" href="{{url_for('dashboard')}}"
+                  ><i class="fa-solid fa-arrow-left"></i> ย้อนกลับ</a
+                >
+              </div> -->
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Mobile toggle button
+        const mobileToggle = document.getElementById("mobileToggle");
+        const sidebar = document.querySelector(".sidebar");
+        const overlay = document.querySelector(".overlay");
+        const toggleSidebar = document.getElementById("toggleSidebar");
+
+        // Dropdown functionality
+        const dropdowns = document.querySelectorAll(".dropdown");
+
+        // Toggle sidebar on mobile
+        mobileToggle.addEventListener("click", function () {
+          sidebar.classList.toggle("active");
+          overlay.classList.toggle("active");
+        });
+
+        // Close sidebar when clicking the X button
+        toggleSidebar.addEventListener("click", function () {
+          sidebar.classList.remove("active");
+          overlay.classList.remove("active");
+        });
+
+        // Close sidebar when clicking overlay
+        overlay.addEventListener("click", function () {
+          sidebar.classList.remove("active");
+          overlay.classList.remove("active");
+        });
+
+        // Handle dropdown clicks
+        dropdowns.forEach((dropdown) => {
+          const btn = dropdown.querySelector(".dropdown-btn");
+
+          btn.addEventListener("click", function () {
+            dropdown.classList.toggle("active");
+          });
+        });
+
+        // Remove the hover functionality for sidebar collapse
+        // Remove mouseenter/mouseleave event listeners
+
+        // Handle window resize
+        window.addEventListener("resize", function () {
+          if (window.innerWidth >= 768) {
+            sidebar.classList.remove("active");
+            overlay.classList.remove("active");
+          }
+        });
+      });
+    </script>
+
+    <script>
+      $(document).ready(function () {
+        $("#assetsTable").DataTable({
+          columnDefs: [
+            {
+              targets: 0, // กำหนดคอลัมน์ที่ 2 (เริ่มจาก 0)
+              width: "150px", // กำหนดความกว้างของคอลัมน์
+            },
+            {
+              targets: 1, // กำหนดคอลัมน์ที่ 2 (เริ่มจาก 0)
+              width: "200px", // กำหนดความกว้างของคอลัมน์
+            },
+            {
+              targets: 2, // กำหนดคอลัมน์ที่ 2 (เริ่มจาก 0)
+              width: "120px", // กำหนดความกว้างของคอลัมน์
+            },
+            {
+              targets: 3, // กำหนดคอลัมน์ที่ 2 (เริ่มจาก 0)
+              width: "120px", // กำหนดความกว้างของคอลัมน์
+            },
+            {
+              targets: 4, // กำหนดคอลัมน์ที่ 2 (เริ่มจาก 0)
+              width: "120px", // กำหนดความกว้างของคอลัมน์
+            },
+            {
+              targets: 5, // กำหนดคอลัมน์ที่ 2 (เริ่มจาก 0)
+              width: "100px", // กำหนดความกว้างของคอลัมน์
+            },
+          ],
+          order: [],
+          language: {
+            search: "ค้นหา",
+            lengthMenu: "แสดง _MENU_ รายการ",
+            info: "แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ",
+            infoEmpty: "แสดง 0 ถึง 0 จาก 0 รายการ",
+            infoFiltered: "(กรองจากทั้งหมด _MAX_ รายการ)",
+            zeroRecords: "ไม่พบข้อมูลที่ค้นหา",
+            emptyTable: "ไม่มีข้อมูลในตาราง",
+            paginate: {
+              first: "หน้าแรก",
+              last: "หน้าสุดท้าย",
+              next: "ถัดไป",
+              previous: "ก่อนหน้า",
+            },
+          },
+          responsive: true,
+        });
+        $('.dt-search input[type="search"]').attr("placeholder", "รหัสทรัพย์สิน ชื่อ แผนก");
+      });
+    </script>
+  </body>
+</html>

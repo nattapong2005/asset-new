@@ -1,0 +1,9 @@
+﻿asset_code,name,nickname,department_id,status,description,asset_type_id,price,buy_date,brand,model,type,cpu_type,cpu_name,ram,ram_memory,mainboard_name,mainboard_model,ssd,ssd_model,hdd,hdd_model,gpu,powersupply,os,check_date,create_account
+MI-001,นายปริญญา ทรัพย์แตง,ตาล,14,ปกติ,,7,8790,,Xiaomi,MI air purifier 4 Pro,,,,,,,,,,,,,,,,
+MI-002,,,4,ปกติ,,7,8299,,Xiaomi,MI air purifier 5S,,,,,,,,,,,,,,,,
+MI-003,,,12,ปกติ,,7,8790,,Xiaomi,MI air purifier 4 Pro,,,,,,,,,,,,,,,,
+MI-004,,,6,ปกติ,,7,4530,,Xiaomi,MI air purifier 4 Lite,,,,,,,,,,,,,,,,
+MI-005,,,13,ปกติ,,7,4530,,Xiaomi,MI air purifier 4 Lite,,,,,,,,,,,,,,,,
+MI-006,นางสวชยุตรา พลายงาม,เมย์,16,ปกติ,,7,4530,,Xiaomi,MI air purifier 4 Lite,,,,,,,,,,,,,,,,
+MI-007,,,19,ปกติ,,7,4530,,Xiaomi,MI air purifier 4 Lite,,,,,,,,,,,,,,,,
+MI-008,,,19,ปกติ,,7,4530,,Xiaomi,MI air purifier 4 Lite,,,,,,,,,,,,,,,,

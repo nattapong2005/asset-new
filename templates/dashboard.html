@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ระบบเก็บทรัพย์สิน</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      .sidebar {
+        transition: all 0.3s ease;
+        transform: translateX(0);
+      }
+
+      .sidebar.collapsed {
+        transform: translateX(-90%);
+      }
+
+      .dropdown-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+      }
+
+      .dropdown.active .dropdown-content {
+        max-height: 500px;
+      }
+
+      .dropdown-arrow {
+        transition: transform 0.3s ease;
+      }
+
+      .dropdown.active .dropdown-arrow {
+        transform: rotate(180deg);
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+          position: fixed;
+          z-index: 50;
+          height: 100vh;
+        }
+
+        .sidebar.active {
+          transform: translateX(0);
+        }
+
+        .overlay {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          z-index: 40;
+        }
+
+        .overlay.active {
+          display: block;
+        }
+      }
+    </style>
+  </head>
+  <body class="">
+    <div class="flex">
+      <!-- Sidebar -->
+      <aside class="sidebar bg-gray-800 text-white w-64 flex-shrink-0 flex flex-col">
+        <!-- Sidebar Header -->
+        <div class="flex items-center justify-center border-b border-gray-700">
+          <div class="flex items-center">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" width="170" />
+            <!-- <i class="fas fa-rocket text-2xl text-gray-300"></i> -->
+            <!-- <span class="text-xl text-red-500 font-bold mt-5">MASARU</span> -->
+          </div>
+          <button id="toggleSidebar" class="md:hidden text-white">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="flex-1">
+          <nav class="p-4 space-y-1">
+            <a
+              href="{{ url_for('dashboard') }}"
+              class="flex items-center p-3 rounded-lg text-white {% if request.path == '/dashboard' %}active{% endif %}"
+            >
+              <i class="fas fa-home mr-3"></i>
+              <span>หน้าหลัก</span>
+            </a>
+            <a href="{{ url_for('assets') }}" class="flex items-center p-3 rounded-lg {% if request.path == '/assets' %}active{% endif %}">
+              <i class="fa-solid fa-list mr-3"></i>
+              <span>รายการทรัพย์สิน</span>
+            </a>
+            {% if isAdmin %}
+            <a
+              href="{{ url_for('admin_assets') }}"
+              class="flex items-center p-3 rounded-lg {% if request.path == '/admin/assets' %}active{% endif %}"
+            >
+              <i class="fa-solid fa-lock mr-3"></i>
+              <span>รายการทรัพย์สิน แอดมิน</span>
+            </a>
+            {% endif %}
+          </nav>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="p-4 border-t border-gray-700">
+          <div class="flex items-center">
+            <img src="https://cdn-icons-png.flaticon.com/512/219/219983.png" alt="User" class="w-10 h-10 rounded-full" />
+            <div class="ml-3">
+              <div class="font-medium">{{user.name}} {{user.lastname}}</div>
+              <a href="/logout" class="text-sm text-red-500">ออกจากระบบ</a>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Overlay for mobile -->
+      <div class="overlay"></div>
+
+      <!-- Main Content -->
+      <div class="container mx-auto flex-1 flex flex-col overflow-hidden">
+        <!-- Top Navigation -->
+        <header class="">
+          <div class="flex items-center justify-between p-5 sm:p-7">
+            <button id="mobileToggle" class="md:hidden text-gray-600">
+              <i class="fas fa-bars text-xl"></i>
+            </button>
+
+            <h1 class="hidden sm:block text-2xl font-bold text-white mb-3">ระบบเก็บทรัพย์สิน MASARU</h1>
+          </div>
+        </header>
+
+        <!-- Page Content -->
+        <main class="flex-1 p-6">
+          <div class="mx-auto">
+            <h1 class="text-2xl text-white mb-3">ภาพรวมหน้าหลัก</h1>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+              <div class="bg-gray-800 p-6 rounded-lg shadow border-b-2 border-gray-500">
+                <div class="flex items-center">
+                  <div class="p-3 rounded-full bg-green-100 text-green-600 w-12 h-12 flex items-center justify-center">
+                    <i class="fas fa-check-circle text-xl"></i>
+                  </div>
+                  <div class="ml-4">
+                    <p class="text-gray-400">ปกติ</p>
+                    <h3 class="text-2xl font-bold text-white">{{status_counts['normal']}}</h3>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-gray-800 p-6 rounded-lg shadow border-b-2 border-gray-500">
+                <div class="flex items-center">
+                  <div class="p-3 rounded-full bg-gray-100 text-gray-600 w-12 h-12 flex items-center justify-center">
+                    <i class="fas fa-times-circle text-xl"></i>
+                  </div>
+                  <div class="ml-4">
+                    <p class="text-gray-400">เสีย</p>
+                    <h3 class="text-2xl font-bold text-white">{{status_counts['faulty']}}</h3>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-gray-800 p-6 rounded-lg shadow border-b-2 border-gray-500">
+                <div class="flex items-center">
+                  <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 w-12 h-12 flex items-center justify-center">
+                    <i class="fas fa-cloud text-xl"></i>
+                  </div>
+                  <div class="ml-4">
+                    <p class="text-gray-400">สำรอง</p>
+                    <h3 class="text-2xl font-bold text-white">{{status_counts['backup']}}</h3>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-gray-800 p-6 rounded-lg shadow border-b-2 border-gray-500">
+                <div class="flex items-center">
+                  <div class="p-3 rounded-full bg-red-100 text-red-600 w-12 h-12 flex items-center justify-center">
+                    <i class="fas fa-search-minus text-xl"></i>
+                  </div>
+                  <div class="ml-4">
+                    <p class="text-gray-400">หาไม่เจอ</p>
+                    <h3 class="text-2xl font-bold text-white">{{status_counts['not_found']}}</h3>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-container bg-gray-800 p-5">
+              <canvas id="myChart"></canvas>
+            </div>
+
+            <!-- Recent Activity -->
+            <!-- <div class="bg-white p-6 rounded-lg shadow mb-6">
+              <h2 class="text-xl font-semibold mb-4">Recent Activity</h2>
+              <div class="space-y-4">
+                <div class="flex items-start">
+                  <div class="p-2 bg-gray-100 rounded-full">
+                    <i class="fas fa-shopping-cart text-gray-600"></i>
+                  </div>
+                  <div class="ml-4">
+                    <p class="font-medium">New order received</p>
+                    <p class="text-gray-500 text-sm">Order #1234 from John Doe</p>
+                    <p class="text-gray-400 text-xs">2 minutes ago</p>
+                  </div>
+                </div>
+
+                <div class="flex items-start">
+                  <div class="p-2 bg-green-100 rounded-full">
+                    <i class="fas fa-user-plus text-green-600"></i>
+                  </div>
+                  <div class="ml-4">
+                    <p class="font-medium">New customer registered</p>
+                    <p class="text-gray-500 text-sm">Sarah Johnson signed up</p>
+                    <p class="text-gray-400 text-xs">1 hour ago</p>
+                  </div>
+                </div>
+
+                <div class="flex items-start">
+                  <div class="p-2 bg-yellow-100 rounded-full">
+                    <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+                  </div>
+                  <div class="ml-4">
+                    <p class="font-medium">Low inventory alert</p>
+                    <p class="text-gray-500 text-sm">Product XYZ is running low</p>
+                    <p class="text-gray-400 text-xs">3 hours ago</p>
+                  </div>
+                </div>
+              </div>
+            </div> -->
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Mobile toggle button
+        const mobileToggle = document.getElementById("mobileToggle");
+        const sidebar = document.querySelector(".sidebar");
+        const overlay = document.querySelector(".overlay");
+        const toggleSidebar = document.getElementById("toggleSidebar");
+
+        // Dropdown functionality
+        const dropdowns = document.querySelectorAll(".dropdown");
+
+        // Toggle sidebar on mobile
+        mobileToggle.addEventListener("click", function () {
+          sidebar.classList.toggle("active");
+          overlay.classList.toggle("active");
+        });
+
+        // Close sidebar when clicking the X button
+        toggleSidebar.addEventListener("click", function () {
+          sidebar.classList.remove("active");
+          overlay.classList.remove("active");
+        });
+
+        // Close sidebar when clicking overlay
+        overlay.addEventListener("click", function () {
+          sidebar.classList.remove("active");
+          overlay.classList.remove("active");
+        });
+
+        // Handle dropdown clicks
+        dropdowns.forEach((dropdown) => {
+          const btn = dropdown.querySelector(".dropdown-btn");
+
+          btn.addEventListener("click", function () {
+            dropdown.classList.toggle("active");
+          });
+        });
+
+        // Remove the hover functionality for sidebar collapse
+        // Remove mouseenter/mouseleave event listeners
+
+        // Handle window resize
+        window.addEventListener("resize", function () {
+          if (window.innerWidth >= 768) {
+            sidebar.classList.remove("active");
+            overlay.classList.remove("active");
+          }
+        });
+      });
+    </script>
+
+    <script>
+      // ดึงข้อมูลจาก API /chart_data
+      fetch("/chart_data")
+        .then((response) => response.json())
+        .then((data) => {
+          const department = data.map((item) => item.department); // แผนก
+          const asset_count = data.map((item) => item.asset_count); // จำนวนทรัพย์สิน
+
+          const backgroundColors = [
+            "rgba(255, 99, 132, 0.2)", // สีสำหรับแท่งแรก (Red)
+            "rgba(54, 162, 235, 0.2)", // สีสำหรับแท่งที่สอง (Blue)
+            "rgba(255, 205, 86, 0.2)", // สีสำหรับแท่งที่สาม (Yellow)
+            "rgba(75, 192, 192, 0.2)", // สีสำหรับแท่งที่สี่ (Green)
+            "rgba(153, 102, 255, 0.2)", // สีสำหรับแท่งที่ห้า (Purple)
+            "rgba(255, 159, 64, 0.2)", // สีสำหรับแท่งที่หก (Orange)
+          ];
+
+          const borderColors = [
+            "rgba(255, 99, 132, 1)", // สีขอบของแท่งแรก (Red)
+            "rgba(54, 162, 235, 1)", // สีขอบของแท่งที่สอง (Blue)
+            "rgba(255, 205, 86, 1)", // สีขอบของแท่งที่สาม (Yellow)
+            "rgba(75, 192, 192, 1)", // สีขอบของแท่งที่สี่ (Green)
+            "rgba(153, 102, 255, 1)", // สีขอบของแท่งที่ห้า (Purple)
+            "rgba(255, 159, 64, 1)", // สีขอบของแท่งที่หก (Orange)
+          ];
+
+          // สร้าง Bar Chart
+          const ctx = document.getElementById("myChart").getContext("2d");
+          const myChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+              labels: department,
+              datasets: [
+                {
+                  label: "กราฟทรัพย์สินตามแผนก",
+                  data: asset_count,
+                  backgroundColor: backgroundColors,
+                  borderColor: borderColors,
+                  borderWidth: 1,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              scales: {
+                y: {
+                  beginAtZero: true, // เริ่มที่ 0 บนแกน Y
+                },
+              },
+            },
+          });
+        })
+        .catch((error) => console.error("Error:", error)); // ตรวจสอบข้อผิดพลาด
+    </script>
+  </body>
+</html>

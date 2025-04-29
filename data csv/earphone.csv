@@ -1,0 +1,9 @@
+﻿asset_code,name,nickname,department_id,status,description,asset_type_id,price,buy_date,brand,model,type,cpu_type,cpu_name,ram,ram_memory,mainboard_name,mainboard_model,ssd,ssd_model,hdd,hdd_model,gpu,powersupply,os,check_date,create_account
+EP-01,ฉันชนก โสตถิปิณฑะ,ขนุน,3,ปกติ,,18,,,Apple,3.5 MM Headphone Plug,,,,,,,,,,,,,,,,
+EP-02,ณัฐสินี เอกณรงพันธ์,ปอ,3,ปกติ,,18,,,Apple,3.5 MM Headphone Plug,,,,,,,,,,,,,,,,
+EP-03,ปาริฉัตร ยิ้มแต้,อีฟ,3,ปกติ,,18,,,Apple,3.5 MM Headphone Plug,,,,,,,,,,,,,,,,
+EP-04,สมรส สุกสา,พัน,3,ปกติ,,18,,,Apple,3.5 MM Headphone Plug,,,,,,,,,,,,,,,,
+EP-05,ศรัณยา ใบเตย,หมิว,3,ปกติ,,18,,,Apple,3.5 MM Headphone Plug,,,,,,,,,,,,,,,,
+EP-06,ณฐิดา ธรรมเจริญ,ปลิว,3,ปกติ,,18,,,Apple,3.5 MM Headphone Plug,,,,,,,,,,,,,,,,
+EP-07,นัฐพันธ์ ดอนสุวรรณ์,เตอร์,3,ปกติ,,18,,,Apple,3.5 MM Headphone Plug,,,,,,,,,,,,,,,,
+EP-08,พงศธร ทับยาง,นิว ,3,ปกติ,,18,,,Apple,3.5 MM Headphone Plug,,,,,,,,,,,,,,,,

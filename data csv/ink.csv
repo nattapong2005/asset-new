@@ -1,0 +1,7 @@
+﻿asset_code,name,nickname,department_id,status,description,asset_type_id,price,buy_date,brand,model,type,cpu_type,cpu_name,ram,ram_memory,mainboard_name,mainboard_model,ssd,ssd_model,hdd,hdd_model,gpu,powersupply,os,check_date,create_account
+47 Black,,ตาล,14,ปกติ,,22,295,,Canon,47 Black,,,,,,,,,,,,,,,,
+57 Color,,ตาล,14,ปกติ,,22,530,,Canon,57 Color,,,,,,,,,,,,,,,,
+100 ml M,,พี่วัฒน์,10,ปกติ,,22,95,,Canon,100 ml M color Fly,,,,,,,,,,,,,,,,
+101 ml Y,,พี่วัฒน์,10,ปกติ,,22,95,,Canon,101 ml Y color Fly,,,,,,,,,,,,,,,,
+102 ml C,,พี่วัฒน์,10,ปกติ,,22,95,,Canon,102 ml C color Fly,,,,,,,,,,,,,,,,
+170 ml -71 BK,,พี่วัฒน์,10,ปกติ,,22,184,,Canon,170 ml -71 BK,,,,,,,,,,,,,,,,

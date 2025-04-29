@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>รายละเอียดสินทรัพย์</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body class="bg-gradient-to-b from-gray-900 to-gray-800 text-gray-200 min-h-screen flex flex-col items-center py-10">
+    <div class="container mx-auto px-3">
+      <div class="flex items-center justify-center sm:justify-normal mb-3 mt-5">
+        <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">รายละเอียดสินทรัพย์</h1>
+      </div>
+
+      <div class="grid grid-cols-1">
+        <div
+          class="bg-gray-800/80 backdrop-blur rounded-lg shadow-xl p-6 border border-gray-700/50 flex flex-col transition-all hover:shadow-blue-900/20 hover:shadow-2xl"
+        >
+          <h2 class="text-xl font-semibold text-blue-300 mb-4 border-b border-gray-700/50 pb-2 flex items-center">ข้อมูลผู้ครอบครอง</h2>
+          <div class="flex-1 text-base">
+            <div class="flex justify-between items-center mb-2">
+              <span class="font-medium text-gray-400">ชื่อ-สกุล</span>
+              <span class="bg-gray-700 px-3 py-1 rounded-lg">{{ asset.name or "-" }} {{asset.nickname or ""}}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="font-medium text-gray-400">แผนก</span>
+              <span class="bg-gray-700 px-3 py-1 rounded-lg">{{ asset.department.name }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
+        <!-- Card 1: ข้อมูลทรัพย์สินหลัก -->
+        <div
+          class="bg-gray-800/80 backdrop-blur rounded-lg shadow-lg p-6 border border-gray-700/50 flex flex-col transition-all hover:shadow-blue-900/20 hover:shadow-xl"
+        >
+          <h2 class="text-xl font-semibold text-blue-300 mb-4 border-b border-gray-700/50 pb-2 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-2 text-blue-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            ข้อมูลทรัพย์สิน
+          </h2>
+          <div class="flex-1 space-y-4 text-base">
+            <div class="flex justify-between items-center">
+              <span class="font-medium text-gray-400">รหัสทรัพย์สิน:</span>
+              <span class="bg-gray-700/50 px-3 py-1 rounded-lg">{{ asset.asset_code }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="font-medium text-gray-400">รายละเอียด:</span>
+              <span class="text-white">{{ asset.description or  "-" }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="font-medium text-gray-400">ยี่ห้อ:</span>
+              <span>{{ asset.brand or "-" }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="font-medium text-gray-400">ราคา:</span>
+              <span class="font-semibold text-green-300">{{ "{:,.2f}".format(asset.price) if asset.price else '-' }} บาท</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="font-medium text-gray-400">สถานะ:</span>
+              <span
+                class="px-3 py-1 rounded-lg text-sm {% if asset.status == 'ปกติ' %} bg-green-900/70 text-green-300 {% elif asset.status == 'เสีย' %} bg-gray-700/70 text-gray-300 {% elif asset.status == 'สำรอง' %} bg-yellow-800/70 text-yellow-300 {% elif asset.status == 'หาไม่เจอ' %} bg-red-900/70 text-red-300 {% else %} bg-gray-700/70 text-gray-400 {% endif %}"
+              >
+                {{ asset.status }}
+              </span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="font-medium text-gray-400">ประเภท:</span>
+              <span class="bg-blue-900/30 px-3 py-1 rounded-lg text-blue-200"
+                >{{ asset.asset_type.name if asset.asset_type else '-' }}</span
+              >
+            </div>
+          </div>
+        </div>
+          
+
+         <!-- Card 3: รายละเอียดอื่น ๆ -->
+         {% if isPc %}
+         <div
+           class="bg-gray-800/80 backdrop-blur rounded-lg shadow-lg p-6 border border-gray-700/50 flex flex-col transition-all hover:shadow-cyan-900/20 hover:shadow-xl"
+         >
+           <h2 class="text-xl font-semibold text-cyan-300 mb-4 border-b border-gray-700/50 pb-2 flex items-center">
+             <svg
+               xmlns="http://www.w3.org/2000/svg"
+               class="h-5 w-5 mr-2 text-cyan-400"
+               fill="none"
+               viewBox="0 0 24 24"
+               stroke="currentColor"
+             >
+               <path
+                 stroke-linecap="round"
+                 stroke-linejoin="round"
+                 stroke-width="2"
+                 d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+               />
+             </svg>
+             รายละเอียดอื่น ๆ
+           </h2>
+           <div class="flex-1 space-y-3 text-sm">
+             <div class="grid grid-cols-3 gap-1">
+               <span class="font-medium text-gray-400 col-span-1">CPU:</span>
+               <span class="col-span-2">{{ asset.cpu_name }} {{ asset.cpu_type }}</span>
+             </div>
+             <div class="grid grid-cols-3 gap-1">
+               <span class="font-medium text-gray-400 col-span-1">RAM:</span>
+               <span class="col-span-2">{{ asset.ram }} <span class="text-cyan-300">({{ asset.ram_memory }} GB)</span></span>
+             </div>
+             <div class="grid grid-cols-3 gap-1">
+               <span class="font-medium text-gray-400 col-span-1">Mainboard:</span>
+               <span class="col-span-2">{{ asset.mainboard_name }} {{ asset.mainboard_model }}</span>
+             </div>
+             <div class="grid grid-cols-3 gap-1">
+               <span class="font-medium text-gray-400 col-span-1">SSD:</span>
+               <span class="col-span-2">{{ asset.ssd }} {{ asset.ssd_model }}</span>
+             </div>
+             <div class="grid grid-cols-3 gap-1">
+               <span class="font-medium text-gray-400 col-span-1">HDD:</span>
+               <span class="col-span-2">{{ asset.hdd or "-" }} {{ asset.hdd_model  or ""}}</span>
+             </div>
+             <div class="grid grid-cols-3 gap-1">
+               <span class="font-medium text-gray-400 col-span-1">GPU:</span>
+               <span class="col-span-2">{{ asset.gpu }}</span>
+             </div>
+             <div class="grid grid-cols-3 gap-1">
+               <span class="font-medium text-gray-400 col-span-1">Power Supply:</span>
+               <span class="col-span-2">{{ asset.powersupply }}</span>
+             </div>
+             <div class="grid grid-cols-3 gap-1">
+               <span class="font-medium text-gray-400 col-span-1">OS:</span>
+               <span class="col-span-2">{{ asset.os }}</span>
+             </div>
+             <div class="mt-4 pt-2 border-t border-gray-700/30">
+               <div class="grid grid-cols-3 gap-1 mb-1">
+                 <span class="font-medium text-gray-400 col-span-1">วันที่ตรวจเช็ค:</span>
+                 <span class="col-span-2">{{ asset.check_date.strftime("%d/%m/%Y") if asset.check_date else '-' }}</span>
+               </div>
+               <div class="grid grid-cols-3 gap-1 mb-1">
+                 <span class="font-medium text-gray-400 col-span-1">วันที่ซื้อ:</span>
+                 <span class="col-span-2">{{ asset.buy_date.strftime("%d/%m/%Y") if asset.buy_date else '-' }}</span>
+               </div>
+               <div class="grid grid-cols-3 gap-1">
+                 <span class="font-medium text-gray-400 col-span-1">สร้างบัญชี:</span>
+                 <span class="col-span-2">{{ asset.account_create or "-" }}</span>
+               </div>
+             </div>
+           </div>
+         </div>
+         {% else %} 
+         <!--  -->
+         <div
+           class="bg-gray-800/80 backdrop-blur rounded-lg shadow-lg p-6 border border-gray-700/50 flex flex-col transition-all hover:shadow-cyan-900/20 hover:shadow-xl"
+         >
+           <h2 class="text-xl font-semibold text-cyan-300 mb-4 border-b border-gray-700/50 pb-2 flex items-center">
+             <svg
+               xmlns="http://www.w3.org/2000/svg"
+               class="h-5 w-5 mr-2 text-cyan-400"
+               fill="none"
+               viewBox="0 0 24 24"
+               stroke="currentColor"
+             >
+               <path
+                 stroke-linecap="round"
+                 stroke-linejoin="round"
+                 stroke-width="2"
+                 d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+               />
+             </svg>
+             รายละเอียดอื่น ๆ
+           </h2>
+           <div class="flex-1 space-y-3 text-sm">
+            <div class="grid grid-cols-3 gap-1">
+              <span class="font-medium text-gray-400 col-span-1">รุ่น:</span>
+              <span class="col-span-2">{{ asset.model or "-" }}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-1 mb-1">
+              <span class="font-medium text-gray-400 col-span-1">วันที่ตรวจเช็ค:</span>
+              <span class="col-span-2">{{ asset.check_date.strftime("%d/%m/%Y") if asset.check_date else '-' }}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-1 mb-1">
+              <span class="font-medium text-gray-400 col-span-1">วันที่ซื้อ:</span>
+              <span class="col-span-2">{{ asset.buy_date.strftime("%d/%m/%Y") if asset.buy_date else '-' }}</span>
+            </div>
+             </div>
+           </div>
+         </div>
+       </div>
+       {% endif %}
+        <!-- End grid -->
+      </div>
+
+      <div class="mt-12 text-center">
+        <a
+          href="{{ url_for('assets') }}"
+          class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-500 hover:to-blue-400 transition-all duration-300 shadow-lg hover:shadow-blue-800/30"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          กลับหน้ารายการสินทรัพย์
+        </a>
+      </div>
+    </div>
+  </body>
+</html>

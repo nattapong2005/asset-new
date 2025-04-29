@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>รายละเอียดสินทรัพย์</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='lib/datatables/dataTables.min.css') }}" />
+    <script src="{{ url_for('static', filename='lib/jquery/jquery-3.7.1.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='lib/datatables/dataTables.min.js') }}"></script>
+  </head>
+  <body>
+    <div class="p-4 sm:p-10 mt-4 sm:mt-10">
+      <h1 class="text-4xl font-bold mb-2">รายการทรัพย์สิน <span class="text-red-600">MASARU</span></h1>
+      
+
+      <!-- ---------------------------- -->
+      <div class="overflow-x-auto bg-gray-800 p-3 sm:p-5 rounded-lg">
+        <div class="flex flex-col space-y-4 md:space-y-0 md:flex-row md:justify-between md:items-center mb-4">
+          <div class="mb-2 md:mb-0">
+            <a
+              href="{{ url_for('add_asset') }}"
+              class="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-md flex items-center justify-center md:justify-start gap-1 w-full md:w-auto transition-colors"
+            >
+              <i class="fa-solid fa-plus"></i> เพิ่มทรัพย์สิน
+            </a>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2">
+            <form method="GET" action="{{ url_for('admin_search') }}" class="flex flex-wrap items-end gap-2">
+              <div class="w-full sm:w-auto">
+                <label for="status" class="block text-white font-medium mb-1">สถานะ</label>
+                <select
+                  name="query"
+                  id="status"
+                  class="w-full px-3 py-1.5 border border-gray-300 bg-white rounded-md shadow-sm text-gray-800"
+                >
+                  <option value="">ทั้งหมด</option>
+                  <option value="ปกติ">ปกติ</option>
+                  <option value="สำรอง">สำรอง</option>
+                  <option value="เสีย">เสีย</option>
+                  <option value="หาไม่เจอ">หาไม่เจอ</option>
+                </select>
+              </div>
+              <div class="w-full sm:w-auto">
+                <button
+                  type="submit"
+                  class="w-full sm:w-auto px-4 py-2 bg-gray-500 text-white rounded-md shadow hover:bg-gray-600 transition"
+                >
+                  กรอง
+                </button>
+              </div>
+            </form>
+            <form method="GET" action="{{ url_for('admin_search') }}" class="flex flex-wrap items-end gap-2">
+              <div class="w-full sm:w-auto">
+                <label for="department" class="block text-white font-medium mb-1">แผนก</label>
+                <select
+                  name="query"
+                  id="department"
+                  class="w-full px-3 py-1.5 border border-gray-300 bg-white rounded-md shadow-sm text-gray-800"
+                >
+                  <option value="">ทั้งหมด</option>
+                  {% for department in departments %}
+                  <option value="{{ department.name }}">{{ department.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="w-full sm:w-auto">
+                <button
+                  type="submit"
+                  class="w-full sm:w-auto px-4 py-2 bg-gray-500 text-white rounded-md shadow hover:bg-gray-600 transition"
+                >
+                  กรอง
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="relative flex flex-col w-full h-full">
+          <table id="assetsTable" class="w-full text-left table-auto min-w-max">
+            <thead class="bg-gray-700">
+              <tr>
+                <th>รหัสทรัพย์สิน</th>
+                <th>ชื่อ-สกุล</th>
+                <th>แผนก</th>
+                <th>แบรนด์</th>
+                <th>รุ่น</th>
+                <th>ประเภททรัพย์สิน</th>
+                <th>CPU</th>
+                <th>RAM</th>
+                <th>ความจุ RAM</th>
+                <th>SSD</th>
+                <th>HDD</th>
+                <th>GPU</th>
+                <th>สถานะ</th>
+                <th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if assets %} {% for asset in assets %}
+              <tr>
+                <td>{{ asset.asset_code }}</td>
+                <td>{{ asset.name or "" }} {% if asset.nickname %} ({{ asset.nickname }}) {% endif %}</td>
+                <td>{{ asset.department.name if asset.department else "-" }}</td>
+                <td>{{ asset.brand if asset.brand else "-" }}</td>
+                <td>{{ asset.model if asset.model else "-" }}</td>
+                <td>{{ asset.asset_type.name if asset.asset_type else "-" }}</td>
+                <td>{{ asset.cpu_name if asset.cpu_name else "-" }}</td>
+                <td>{{ asset.ram if asset.ram else "-" }}</td>
+                <td>{{ asset.ram_memory if asset.ram_memory else "-" }}</td>
+                <td>{{ asset.ssd if asset.ssd else "-" }}</td>
+                <td>{{ asset.hdd if asset.hdd else "-" }}</td>
+                <td>{{ asset.gpu if asset.gpu else "-" }}</td>
+                <td>
+                  <span
+                    class="inline-block px-2.5 text-sm rounded-md {% if asset.status == 'ปกติ' %} bg-green-600 {% elif asset.status == 'เสีย' %} bg-gray-500 {% elif asset.status == 'สำรอง' %} bg-yellow-500 {% elif asset.status == 'หาไม่เจอ' %} bg-red-600 {% else %} bg-gray-700 {% endif %}"
+                  >
+                    {{ asset.status }}
+                  </span>
+                </td>
+                <td>
+                  <!-- Dropdown for actions -->
+                  <div class="relative inline-block text-left action-dropdown">
+                    <button
+                      class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 focus:outline-none"
+                      type="button"
+                      onclick="toggleActionDropdown(this)"
+                    >
+                      <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+                    <div
+                      class="action-menu hidden absolute right-0 sm:right-auto sm:left-0 mt-2 w-36 bg-gray-900 border border-gray-700 rounded-md shadow-lg z-10"
+                    >
+                      <div class="py-1">
+                        <a href="/assets/view/{{ asset.asset_id }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
+                          <i class="fa-solid fa-eye mr-2"></i> ดู
+                        </a>
+                        {% if isAdmin %}
+                        <a href="/assets/edit/{{ asset.asset_id }}" class="block px-4 py-2 text-sm text-blue-400 hover:bg-gray-700">
+                          <i class="fa-solid fa-pen-to-square mr-2"></i> แก้ไข
+                        </a>
+                        <a
+                          href="/assets/{{ asset.asset_id }}/delete"
+                          class="block px-4 py-2 text-sm text-red-400 hover:bg-gray-700"
+                          onclick="return confirm('ยืนยันการลบรายการนี้?');"
+                        >
+                          <i class="fa-solid fa-trash mr-2"></i> ลบ
+                        </a>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %} {% else %}
+              <tr>
+                <td colspan="29" class="py-4">ไม่พบทรัพย์สินที่ค้นหา</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="flex justify-end mt-4">
+          <a class="bg-red-600 hover:bg-red-500 px-5 py-1 rounded-md back-button text-white" href="{{url_for('dashboard')}}"><i class="fa-solid fa-arrow-left"></i> ย้อนกลับ</a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      $(document).ready(function () {
+        $("#assetsTable").DataTable({
+          order: [],
+          language: {
+            search: "ค้นหา",
+            lengthMenu: "แสดง _MENU_ รายการ",
+            info: "แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ",
+            infoEmpty: "แสดง 0 ถึง 0 จาก 0 รายการ",
+            infoFiltered: "(กรองจากทั้งหมด _MAX_ รายการ)",
+            zeroRecords: "ไม่พบข้อมูลที่ค้นหา",
+            emptyTable: "ไม่มีข้อมูลในตาราง",
+            paginate: {
+              first: "หน้าแรก",
+              last: "หน้าสุดท้าย",
+              next: "ถัดไป",
+              previous: "ก่อนหน้า",
+            },
+          },
+        });
+
+        $('.dt-search input[type="search"]').attr("placeholder", "รหัสทรัพย์สิน ชื่อ แผนก");
+      });
+    </script>
+
+    <script>
+      // Function to toggle action dropdowns in table
+      function toggleActionDropdown(buttonElement) {
+        const allMenus = document.querySelectorAll(".action-menu");
+        allMenus.forEach((menu) => {
+          if (menu !== buttonElement.nextElementSibling) {
+            menu.classList.add("hidden");
+          }
+        });
+
+        const actionMenu = buttonElement.nextElementSibling;
+        actionMenu.classList.toggle("hidden");
+      }
+
+      document.addEventListener("click", function (event) {
+        const actionButtons = document.querySelectorAll(".action-dropdown button");
+        const actionMenus = document.querySelectorAll(".action-menu");
+
+        let clickedInside = false;
+
+        actionButtons.forEach((btn) => {
+          if (btn.contains(event.target)) {
+            clickedInside = true;
+          }
+        });
+
+        actionMenus.forEach((menu) => {
+          if (menu.contains(event.target)) {
+            clickedInside = true;
+          }
+        });
+
+        if (!clickedInside) {
+          actionMenus.forEach((menu) => {
+            menu.classList.add("hidden");
+          });
+        }
+      });
+    </script>
+
+    <style>
+      body {
+        color: white !important;
+      }
+    </style>
+  </body>
+</html>

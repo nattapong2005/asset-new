@@ -1,0 +1,65 @@
+@import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Prompt&display=swap");
+
+body {
+  margin: 0;
+  font-family: "Prompt", sans-serif;
+  background-color: #0f1524;
+}
+main {
+  background-color: #0f1524;
+}
+.dt-paging-button.current {
+  background-color: gray !important;
+}
+
+div.dt-container .dt-paging .dt-paging-button {
+  background: transparent !important;
+  border-color: gray !important;
+  border-radius: 5px !important;
+}
+div.dt-container .dt-paging .dt-paging-button:hover {
+  color: white !important;
+  background-color: #374151 !important;
+}
+
+div.dt-container .dt-paging .dt-paging-button:active {
+  outline: none;
+  background-color: black !important;
+  
+}
+
+div.dt-container .dt-paging .dt-paging-button.current,
+div.dt-container .dt-paging .dt-paging-button.current:hover {
+  color: white !important;
+  background-color: gray !important;
+}
+
+div.dt-container select.dt-input {
+  /* padding: 40px !important; */
+  border-color: gray !important;
+  background-color: black !important;
+  color: white !important;
+}
+
+div.dt-container .dt-search input {
+    border: 1px solid #aaa;
+    border-radius: 3px;
+    padding: 5px;
+    background-color: transparent;
+    color: inherit;
+    margin-left: 3px;
+    color: white !important;
+  }
+
+.success {
+  background-color: #16a34a;
+}
+
+.danger {
+  background-color: red;
+}
+
+
+.active {
+  background-color: #0f1524;
+}

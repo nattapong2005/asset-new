@@ -1,0 +1,4 @@
+﻿asset_code,name,nickname,department_id,status,description,asset_type_id,price,buy_date,brand,model,type,cpu_type,cpu_name,ram,ram_memory,mainboard_name,mainboard_model,ssd,ssd_model,hdd,hdd_model,gpu,powersupply,os,check_date,create_account
+CATE-001,,,20,ปกติ,ใช้ติดตั้งกล้องที่คลัง,19,1120,,Glink,GLINK ( 305M GL5004 ),,,,,,,,,,,,,,,,
+CATE-002 ,,,20,ปกติ,ใช้ติดตั้งกล้องที่คลัง,19,1120,,Glink,GLINK ( 305M GL5004 ),,,,,,,,,,,,,,,,
+CATE-003,,,20,ปกติ,ใช้ติดตั้งกล้องที่คลัง,19,1120,,Glink,GLINK ( 305M GL5004 ),,,,,,,,,,,,,,,,

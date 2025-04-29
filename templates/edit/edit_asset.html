@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>แก้ไขข้อมูลทรัพย์สิน</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+  {% if isAdmin %}
+  <body class="bg-gray-700">
+    <div class="container mx-auto py-8 px-4 max-w-4xl">
+      <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <div class="flex items-center mb-6">
+          <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-amber-700">แก้ไขข้อมูลทรัพย์สิน</h1>
+        </div>
+        
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert-{{ category }} p-3 mb-4 rounded-lg text-white {{category}}">
+                    <i class="fas fa-exclamation-circle mr-2"></i>{{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+        <form method="POST" class="space-y-6 text-gray-500">
+          <!-- Basic Info Section -->
+          <div id="basic-info" class="space-y-6">
+            <h2 class="text-xl font-semibold text-gray-700 border-b pb-2">ข้อมูลทั่วไป</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label for="asset_code" class="block text-sm font-medium text-gray-700 mb-1">รหัสทรัพย์สิน </label>
+                <input
+                  type="text"
+                  id="asset_code"
+                  name="asset_code"
+                  value="{{asset.asset_code}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">ชื่อ-สกุล</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value="{{asset.name or ''}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label for="nickname" class="block text-sm font-medium text-gray-700 mb-1">ชื่อเล่น</label>
+                <input
+                  type="text"
+                  id="nickname"
+                  name="nickname"
+                  value="{{asset.nickname or ''}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label for="department_id" class="block text-sm font-medium text-gray-700 mb-1">แผนก</label>
+                <select
+                  id="department_id"
+                  name="department_id"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="{{asset.department.department_id}}" selected>{{asset.department.name}} (ข้อมูลเดิม)</option>
+                  {% for department in departments %}
+                  <option value="{{ department.department_id }}">{{ department.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label for="brand" class="block text-sm font-medium text-gray-700 mb-1">ยี่ห้อ</label>
+                <input
+                  type="text"
+                  id="brand"
+                  name="brand"
+                  value="{{asset.brand or ''}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label for="model" class="block text-sm font-medium text-gray-700 mb-1">รุ่น</label>
+                <input
+                  type="text"
+                  id="model"
+                  name="model"
+                  value="{{asset.model or ''}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label for="description" class="block text-sm font-medium text-gray-700 mb-1">รายละเอียด/หมายเหตุ</label>
+              <input
+                id="description"
+                name="description"
+                rows="3"
+                value="{{asset.description or ''}}"
+                class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              >
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label for="price" class="block text-sm font-medium text-gray-700 mb-1">ราคา</label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span class="text-gray-500">$</span>
+                  </div>
+                  <input
+                    type="number"
+                    id="price"
+                    name="price"
+                    value="{{asset.price}}"
+                    step="0.01"
+                    class="w-full pl-7 p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label for="asset_type_id" class="block text-sm font-medium text-gray-700 mb-1">ประเภทอุปกรณ์</label>
+                <select
+                  id="asset_type_id"
+                  name="asset_type_id"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="{{asset.asset_type.type_id}}" selected>{{asset.asset_type.name}} (ข้อมูลเดิม)</option>
+                  {% for asset_type in asset_types %}
+                  <option value="{{ asset_type.type_id }}">{{ asset_type.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div>
+                <label for="status" class="block text-sm font-medium text-gray-700 mb-1">สถานะ</label>
+                <select
+                  id="status"
+                  name="status"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="{{asset.status}}" selected>{{asset.status}} (ข้อมูลเดิม)</option>
+                  <option value="ปกติ">ปกติ</option>
+                  <option value="สำรอง">สำรอง</option>
+                  <option value="เสีย">เสีย</option>
+                  <option value="หาไม่เจอ">หาไม่เจอ</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label for="type" class="block text-sm font-medium text-gray-700 mb-1">ชนิด</label>
+              <input
+                type="text"
+                id="type"
+                name="type"
+                value="{{asset.type or ''}}"
+                class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          <!-- Technical Specs Section -->
+          <div id="technical-specs" class="space-y-6">
+            <h2 class="text-xl font-semibold text-gray-700 border-b pb-2">รายละเอียดเพิ่มเติม</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label for="cpu_name" class="block text-sm font-medium text-gray-700 mb-1">ชื่อ CPU</label>
+                <input
+                  type="text"
+                  id="cpu_name"
+                  name="cpu_name"
+                  value="{{asset.cpu_name or ''}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label for="cpu_type" class="block text-sm font-medium text-gray-700 mb-1">ประเภท CPU</label>
+                <input
+                  type="text"
+                  id="cpu_type"
+                  name="cpu_type"
+                  value="{{asset.cpu_type or ''}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label for="ram" class="block text-sm font-medium text-gray-700 mb-1">ชนิด RAM</label>
+                <input
+                  type="text"
+                  id="ram"
+                  name="ram"
+                  value="{{asset.ram or ''}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label for="ram_memory" class="block text-sm font-medium text-gray-700 mb-1">ความจุ RAM</label>
+                <input
+                  type="text"
+                  id="ram_memory"
+                  name="ram_memory"
+                  value="{{asset.ram_memory or ''}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label for="mainboard_name" class="block text-sm font-medium text-gray-700 mb-1">ยี่ห้อ Mainboard</label>
+                <input
+                  type="text"
+                  id="mainboard_name"
+                  name="mainboard_name"
+                  value="{{asset.mainboard_name or ''}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label for="mainboard_model" class="block text-sm font-medium text-gray-700 mb-1">รุ่น Mainboard</label>
+                <input
+                  type="text"
+                  id="mainboard_model"
+                  name="mainboard_model"
+                  value="{{asset.mainboard_model or ''}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label for="ssd" class="block text-sm font-medium text-gray-700 mb-1">ความจุ SSD</label>
+                <input
+                  type="text"
+                  id="ssd"
+                  name="ssd"
+                  value="{{asset.ssd or ''}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label for="ssd_model" class="block text-sm font-medium text-gray-700 mb-1">รุ่น SSD</label>
+                <input
+                  type="text"
+                  id="ssd_model"
+                  name="ssd_model"
+                  value="{{asset.ssd_model or ''}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label for="hdd" class="block text-sm font-medium text-gray-700 mb-1">ความจุ HDD</label>
+                <input
+                  type="text"
+                  id="hdd"
+                  name="hdd"
+                  value="{{asset.hdd or ''}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label for="hdd_model" class="block text-sm font-medium text-gray-700 mb-1">รุ่น HDD</label>
+                <input
+                  type="text"
+                  id="hdd_model"
+                  name="hdd_model"
+                  value="{{asset.hdd_model or ''}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label for="gpu" class="block text-sm font-medium text-gray-700 mb-1">ชื่อ GPU</label>
+                <input
+                  type="text"
+                  id="gpu"
+                  name="gpu"
+                  value="{{asset.gpu or ''}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label for="powersupply" class="block text-sm font-medium text-gray-700 mb-1">ชื่อ Power Supply</label>
+                <input
+                  type="text"
+                  id="powersupply"
+                  name="powersupply"
+                  value="{{asset.powersupply or ''}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label for="os" class="block text-sm font-medium text-gray-700 mb-1">ชื่อ OS</label>
+              <input
+                type="text"
+                id="os"
+                name="os"
+                value="{{asset.os or ''}}"
+                class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          <!-- Dates & Details Section -->
+          <div id="date-info" class="space-y-6">
+            <h2 class="text-xl font-semibold text-gray-700 border-b pb-2">เกี่ยวกับวันที่</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label for="check_date" class="block text-sm font-medium text-gray-700 mb-1"
+                  >วันที่ตรวจเช็ค <span class="text-red-400">(เดือน/วัน/ปี)</span></label
+                >
+                <input
+                  type="datetime-local"
+                  id="check_date"
+                  name="check_date"
+                  value="{{check_date}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label for="buy_date" class="block text-sm font-medium text-gray-700 mb-1"
+                  >วันที่ซื้อ <span class="text-red-400">(เดือน/วัน/ปี)</span></label
+                >
+                <input
+                  type="datetime-local"
+                  id="buy_date"
+                  name="buy_date"
+                  value="{{buy_date}}"
+                  class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label for="account_create" class="block text-sm font-medium text-gray-700 mb-1">สร้างบัญชีหรือไม่</label>
+              <input
+                type="text"
+                id="account_create"
+                name="account_create"
+                placeholder="ใช่ หรือ ไม่"
+                class="w-full p-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center pt-4 space-x-4">
+            <div class="flex gap-2">
+              <button
+                type="submit"
+                class="px-5 py-2.5 bg-blue-700 hover:bg-blue-500 text-white font-medium rounded-lg shadow-sm transition duration-200 flex items-center gap-2 cursor-pointer"
+              >
+                <i class="fa-solid fa-pen"></i> บันทึกข้อมูล
+              </button>
+              <button
+                type="reset"
+                class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-red-500 font-medium rounded-lg shadow-sm transition duration-200 cursor-pointer"
+              >
+                <i class="fa-solid fa-trash"></i>
+                ล้างฟอร์ม
+              </button>
+            </div>
+
+            <a
+              href="{{url_for('dashboard')}}"
+              class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-500 font-medium rounded-lg shadow-sm transition duration-200 cursor-pointer"
+            >
+              <i class="fa-solid fa-arrow-left"></i>
+              ย้อนกลับ
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>
+{% else %}
+<p></p>
+
+{% endif %}
