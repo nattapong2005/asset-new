@@ -9,7 +9,7 @@ import os
 from flask_migrate import Migrate
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'SUPERGAYBASS2025'  
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///assetdb.db' 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///a.db' 
 print(f"Load database from {app.config['SQLALCHEMY_DATABASE_URI']}")
 migrate = Migrate(app, db)
 db.init_app(app)
@@ -39,6 +39,16 @@ def checkAdmin():
 #         return user, department
 #     else:
 #         return None, None  
+
+def updatePassword(userData,password,rpassword):
+    
+    if password != rpassword:
+        flash('รหัสผ่านไม่ตรงกัน', 'danger')
+        return False
+    
+    userData.password = generate_password_hash(password)
+    return True
+    
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -191,7 +201,6 @@ def search():
         (Department.name.ilike(f'%{query}%')) 
  
     ).all()
-    isAdmin = checkAdmin()
     department = Department.query.all()
     return render_template('assets.html', assets=assets, departments=department)
 
@@ -366,10 +375,92 @@ def edit_asset(asset_id):
         except:
             flash(f'เกิดข้อผิดพลาด', 'danger')
        
-
-
     
     return render_template('edit/edit_asset.html', isAdmin=isAdmin, asset=asset, departments=department, asset_types=asset_type, buy_date=buy_date, check_date=check_date)
+
+
+@app.route('/admin/users')
+def users():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user_id = session.get(User, session['user_id'])
+    user_info = db.session.query(User, Department).join(Department, User.department_id == Department.department_id).filter(User.user_id == user_id).first()
+    user, department = user_info
+    
+    userData = db.session.query(User, Department).join(Department).all()
+    
+    isAdmin = checkAdmin()
+    
+    
+    return render_template('admin/users.html', user=user, isAdmin=isAdmin, department=department, users=userData)
+
+
+
+@app.route('/admin/user/<int:userID>', methods=['GET', 'POST'])
+def view_user(userID):
+
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user_id = session.get(User, session['user_id'])
+    user_info = db.session.query(User, Department).join(Department, User.department_id == Department.department_id).filter(User.user_id == user_id).first()
+    user, department = user_info
+    
+    isAdmin = checkAdmin()
+    
+    userData = db.session.query(User).options(joinedload(User.department)).filter_by(user_id=userID).first()
+    departments = Department.query.all()
+
+    if not userData:
+        return "ไม่พบข้อมูลผู้ใช้งาน"
+    
+    if request.method == "POST":
+        
+        if 'name' in request.form and 'lastname' in request.form:
+            userData.name = request.form['name']
+            userData.lastname = request.form['lastname']
+            userData.nickname = request.form['nickname']
+            userData.department_id = request.form['department_id']
+
+            try:
+                db.session.commit()
+                flash('แก้ไขข้อมูลเรียบร้อย ' + userData.name, 'success')
+            except:
+                db.session.rollback()
+                flash("เกิดข้อผิดพลาด", 'error')
+
+        if 'rpassword' in request.form:
+            
+            if request.form['password'] != request.form['rpassword']:
+                flash("รหัสผ่านไม่ตรงกัน", 'danger')
+            else:
+                userData.password = generate_password_hash(request.form['password'])
+                try:
+                    db.session.commit()
+                    flash('แก้ไขรหัสผ่านเรียบร้อย', 'success')
+                except:
+                    db.session.rollback()
+                    flash("เกิดข้อผิดพลาด", 'error')
+
+    return render_template('admin/user.html', userData=userData, user=user,department=department, departments=departments,isAdmin=isAdmin)
+
+
+@app.route('/admin/delete/user/<int:user_id>')
+def delete_user(user_id):
+    
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user = db.session.get(User, user_id)
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        flash('ลบข้อมูลเรียบร้อย', 'success')
+    except:
+        db.session.rollback()
+        flash("เกิดข้อผิดพลาด", 'error')
+    return redirect(url_for('users')) 
 
 @app.route('/logout')
 def logout():
@@ -387,4 +478,4 @@ def notfound(error):
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port,debug=True)

@@ -102,6 +102,13 @@
               <i class="fa-solid fa-lock mr-3"></i>
               <span>รายการทรัพย์สิน แอดมิน</span>
             </a>
+            <a
+            href="{{ url_for('users') }}"
+            class="flex items-center p-3 rounded-lg {% if request.path == '/admin/users' %}active{% endif %}"
+          >
+          <i class="fa-solid fa-user mr-3"></i>
+            <span>จัดการผู้ใช้งาน</span>
+          </a>
             {% endif %}
           </nav>
         </div>

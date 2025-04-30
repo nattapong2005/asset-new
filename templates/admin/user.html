@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ระบบเก็บทรัพย์สิน</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+      body {
+        color: white;
+      }
+
+      /* Sidebar and Mobile Toggle */
+      .sidebar {
+        transition: all 0.3s ease;
+        transform: translateX(0);
+      }
+
+      .sidebar.collapsed {
+        transform: translateX(-90%);
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+          position: fixed;
+          z-index: 50;
+          height: 100vh;
+        }
+
+        .sidebar.active {
+          transform: translateX(0);
+        }
+
+        .overlay {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          z-index: 40;
+        }
+
+        .overlay.active {
+          display: block;
+        }
+      }
+
+      /* Custom Styles */
+      th,
+      td {
+        text-align: left !important;
+      }
+
+      .form-container {
+        background-color: #1f2937;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .form-header {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #e5e7eb;
+        margin-bottom: 1.5rem;
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .form-group input,
+      .form-group select {
+        background-color: #374151;
+        border: 1px solid #4b5563;
+        color: #e5e7eb;
+        padding: 0.75rem;
+        border-radius: 8px;
+        width: 100%;
+        transition: border-color 0.3s ease;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus {
+        border-color: #60a5fa;
+        outline: none;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        color: #d1d5db;
+      }
+
+      .form-group button {
+        background-color: #3b82f6;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        width: 100%;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: background-color 0.3s ease;
+      }
+
+      .form-group button:hover {
+        background-color: #2563eb;
+      }
+
+      .form-group button:focus {
+        outline: none;
+        background-color: #1d4ed8;
+      }
+
+      .form-separator {
+        margin: 2rem 0;
+        border-top: 1px solid #4b5563;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+      }
+    </style>
+  </head>
+  <body class="">
+    <!-- Sidebar and Overlay -->
+    <div class="flex min-h-screen">
+      <aside class="sidebar bg-gray-800 text-white w-64 flex-shrink-0 flex flex-col">
+        <div class="flex items-center justify-center border-b border-gray-700">
+          <div class="flex items-center">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" width="170" />
+          </div>
+          <button id="toggleSidebar" class="md:hidden text-white">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="flex-1">
+          <nav class="p-4 space-y-1">
+            <a
+              href="{{ url_for('dashboard') }}"
+              class="flex items-center p-3 rounded-lg text-white {% if request.path == '/dashboard' %}active{% endif %}"
+            >
+              <i class="fas fa-home mr-3"></i>
+              <span>หน้าหลัก</span>
+            </a>
+            <a href="{{ url_for('assets') }}" class="flex items-center p-3 rounded-lg {% if request.path == '/assets' %}active{% endif %}">
+              <i class="fa-solid fa-list mr-3"></i>
+              <span>รายการทรัพย์สิน</span>
+            </a>
+            {% if isAdmin %}
+            <a
+              href="{{ url_for('admin_assets') }}"
+              class="flex items-center p-3 rounded-lg {% if request.path == '/admin/assets' %}active{% endif %}"
+            >
+              <i class="fa-solid fa-lock mr-3"></i>
+              <span>รายการทรัพย์สิน แอดมิน</span>
+            </a>
+            <a
+              href="{{ url_for('users') }}"
+              class="flex items-center p-3 rounded-lg {% if request.path == '/admin/users' %}active{% endif %}"
+            >
+              <i class="fa-solid fa-user mr-3"></i>
+              <span>จัดการผู้ใช้งาน</span>
+            </a>
+            {% endif %}
+          </nav>
+        </div>
+        <div class="p-4 border-t border-gray-700">
+          <div class="flex items-center">
+            <img src="https://cdn-icons-png.flaticon.com/512/219/219983.png" alt="User" class="w-10 h-10 rounded-full" />
+            <div class="ml-3">
+              <div class="font-medium">{{user.name}} {{user.lastname}}</div>
+              <a href="/logout" class="text-sm text-red-500">ออกจากระบบ</a>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Overlay -->
+      <div class="overlay"></div>
+
+      <!-- Main Content -->
+      <div class="container mx-auto flex-1 flex flex-col overflow-hidden">
+        <header class="flex items-center justify-between p-5 sm:p-7">
+          <button id="mobileToggle" class="md:hidden text-gray-600">
+            <i class="fas fa-bars text-xl"></i>
+          </button>
+          <h1 class="hidden sm:block text-2xl font-bold text-white mb-3">ระบบเก็บทรัพย์สิน MASARU</h1>
+        </header>
+
+        <!-- Page Content -->
+        <main class="flex-1 p-6">
+          <div class="flex justify-between items-center">
+            <h1 class="text-white text-3xl font-bold mb-5">แก้ไขผู้ใช้งาน</h1>
+
+            <a
+              href="{{ url_for('users') }}"
+              class="px-5 py-1 bg-gray-200 hover:bg-gray-300 text-gray-500 font-medium rounded-lg shadow-sm transition duration-200 cursor-pointer"
+            >
+              <i class="fa-solid fa-arrow-left"></i>
+              ย้อนกลับ
+            </a>
+          </div>
+
+          {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in messages %}
+          <div class="alert-{{ category }} p-3 mb-4 rounded-lg text-white {{category}}">
+            <i class="fas fa-exclamation-circle mr-2"></i>{{ message }}
+          </div>
+          {% endfor %} {% endif %} {% endwith %}
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <!-- Form 1: ข้อมูลส่วนตัว -->
+            <div class="form-container">
+              <form action="{{url_for('view_user', userID=userData.user_id)}}" method="POST">
+                <div class="form-header">ข้อมูลส่วนตัว</div>
+
+                <div class="form-group">
+                  <label for="name">ชื่อ</label>
+                  <input type="text" name="name" value="{{userData.name}}" id="name" />
+                </div>
+
+                <div class="form-group">
+                  <label for="lastname">นามสกุล</label>
+                  <input type="text" name="lastname" value="{{userData.lastname}}" id="lastname" />
+                </div>
+
+                <div class="form-group">
+                  <label for="nickname">ชื่อเล่น</label>
+                  <input type="text" name="nickname" value="{{userData.nickname}}" id="nickname" />
+                </div>
+
+                <div class="form-group">
+                  <label for="department_id">แผนก</label>
+                  <select name="department_id" id="department_id">
+                    <option value="{{userData.department.department_id}}" selected>{{userData.department.name}} (ข้อมูลเดิม)</option>
+                    {% for department in departments %}
+                    <option value="{{department.department_id}}">{{department.name}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="username">ผู้ใช้งาน</label>
+                  <input type="text" name="username" value="{{userData.username}}" id="username" class="cursor-not-allowed" disabled />
+                </div>
+
+                <div class="form-group">
+                  <button type="submit">บันทึกข้อมูลส่วนตัว</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Form 2: รหัสผ่าน -->
+            <div class="form-container">
+              <form action="{{url_for('view_user', userID=userData.user_id)}}" method="POST">
+                <div class="form-header">การเปลี่ยนรหัสผ่าน</div>
+
+                <div class="form-group">
+                  <label for="password">รหัสผ่าน</label>
+                  <input type="password" name="password" id="password" placeholder="กรอกรหัสผ่านใหม่" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="rpassword">ยืนยันรหัสผ่าน</label>
+                  <input type="password" name="rpassword" id="rpassword" placeholder="ยืนยันรหัสผ่านใหม่" required />
+                </div>
+
+                <div class="form-group">
+                  <button type="submit">บันทึกรหัสผ่าน</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Mobile toggle button functionality
+        const mobileToggle = document.getElementById("mobileToggle");
+        const sidebar = document.querySelector(".sidebar");
+        const overlay = document.querySelector(".overlay");
+        const toggleSidebar = document.getElementById("toggleSidebar");
+
+        mobileToggle.addEventListener("click", function () {
+          sidebar.classList.toggle("active");
+          overlay.classList.toggle("active");
+        });
+
+        toggleSidebar.addEventListener("click", function () {
+          sidebar.classList.remove("active");
+          overlay.classList.remove("active");
+        });
+
+        overlay.addEventListener("click", function () {
+          sidebar.classList.remove("active");
+          overlay.classList.remove("active");
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ระบบเก็บทรัพย์สิน</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='lib/datatables/dataTables.min.css') }}" />
+    <script src="{{ url_for('static', filename='lib/jquery/jquery-3.7.1.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='lib/datatables/dataTables.min.js') }}"></script>
+    <style>
+      .sidebar {
+        transition: all 0.3s ease;
+        transform: translateX(0);
+      }
+
+      .sidebar.collapsed {
+        transform: translateX(-90%);
+      }
+
+      .dropdown-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+      }
+
+      .dropdown.active .dropdown-content {
+        max-height: 500px;
+      }
+
+      .dropdown-arrow {
+        transition: transform 0.3s ease;
+      }
+
+      .dropdown.active .dropdown-arrow {
+        transform: rotate(180deg);
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+          position: fixed;
+          z-index: 50;
+          height: 100vh;
+        }
+
+        .sidebar.active {
+          transform: translateX(0);
+        }
+
+        .overlay {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          z-index: 40;
+        }
+
+        .overlay.active {
+          display: block;
+        }
+      }
+        body {
+            color: white;
+        }
+    </style>
+  </head>
+  <body class="">
+    <div class="flex min-h-screen">
+      <!-- Sidebar -->
+      <aside class="sidebar bg-gray-800 text-white w-64 flex-shrink-0 flex flex-col">
+        <!-- Sidebar Header -->
+        <div class="flex items-center justify-center border-b border-gray-700">
+          <div class="flex items-center">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" width="170" />
+            <!-- <i class="fas fa-rocket text-2xl text-gray-300"></i> -->
+            <!-- <span class="text-xl text-red-500 font-bold mt-5">MASARU</span> -->
+          </div>
+          <button id="toggleSidebar" class="md:hidden text-white">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="flex-1">
+          <nav class="p-4 space-y-1">
+            <a
+              href="{{ url_for('dashboard') }}"
+              class="flex items-center p-3 rounded-lg text-white {% if request.path == '/dashboard' %}active{% endif %}"
+            >
+              <i class="fas fa-home mr-3"></i>
+              <span>หน้าหลัก</span>
+            </a>
+            <a href="{{ url_for('assets') }}" class="flex items-center p-3 rounded-lg {% if request.path == '/assets' %}active{% endif %}">
+              <i class="fa-solid fa-list mr-3"></i>
+              <span>รายการทรัพย์สิน</span>
+            </a>
+            {% if isAdmin %}
+            <a
+              href="{{ url_for('admin_assets') }}"
+              class="flex items-center p-3 rounded-lg {% if request.path == '/admin/assets' %}active{% endif %}"
+            >
+              <i class="fa-solid fa-lock mr-3"></i>
+              <span>รายการทรัพย์สิน แอดมิน</span>
+            </a>
+            <a
+            href="{{ url_for('users') }}"
+            class="flex items-center p-3 rounded-lg {% if request.path == '/admin/users' %}active{% endif %}"
+          >
+          <i class="fa-solid fa-user mr-3"></i>
+            <span>จัดการผู้ใช้งาน</span>
+          </a>
+            {% endif %}
+          </nav>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="p-4 border-t border-gray-700">
+          <div class="flex items-center">
+            <img src="https://cdn-icons-png.flaticon.com/512/219/219983.png" alt="User" class="w-10 h-10 rounded-full" />
+            <div class="ml-3">
+              <div class="font-medium">{{user.name}} {{user.lastname}}</div>
+              <a href="/logout" class="text-sm text-red-500">ออกจากระบบ</a>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Overlay for mobile -->
+      <div class="overlay"></div>
+
+      <!-- Main Content -->
+      <div class="container mx-auto flex-1 flex flex-col overflow-hidden">
+        <!-- Top Navigation -->
+        <header class="">
+          <div class="flex items-center justify-between p-5 sm:p-7">
+            <button id="mobileToggle" class="md:hidden text-gray-600">
+              <i class="fas fa-bars text-xl"></i>
+            </button>
+
+            <h1 class="hidden sm:block text-2xl font-bold text-white mb-3">ระบบเก็บทรัพย์สิน MASARU</h1>
+          </div>
+        </header>
+
+        <!-- Page Content -->
+        <main class="flex-1 p-6">
+          
+          {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in messages %}
+          <div class="alert-{{ category }} p-3 mb-4 rounded-lg text-white {{category}}">
+            <i class="fas fa-exclamation-circle mr-2"></i>{{ message }}
+          </div>
+          {% endfor %} {% endif %} {% endwith %}
+          
+            <h1 class="text-white text-2xl font-bold mb-5">จัดการผู้ใช้งาน</h1>
+            <table id="userTable" class="min-w-full table-auto border-collapse bg-gray-800">
+                <thead class="bg-gray-700 text-white">
+                    <tr>
+                        <th class="font-semibold">ไอดี</th>
+                        <th class="font-semibold">ชื่อ-สกุล</th>
+                        <th class="font-semibold">แผนก</th>
+                        <th class="font-semibold">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user, department in users %}
+
+                    <tr class=" hover:bg-gray-700">
+                        <td class="px-4 py-2">{{user.user_id}}</td>
+                        <td class="px-4 py-2">{{user.name}} {{user.lastname}} ({{user.nickname}})</td>
+                        <td class="px-4 py-2">{{department.name}}</td>
+                        <td>
+                            <!-- Dropdown for actions -->
+                            <div class="relative inline-block text-left action-dropdown">
+                              <button
+                                class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 focus:outline-none"
+                                type="button"
+                                onclick="toggleActionDropdown(this)"
+                              >
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                              </button>
+                              <div
+                                class="action-menu hidden absolute right-0 sm:right-auto sm:left-0 mt-2 w-36 bg-gray-900 border border-gray-700 rounded-md shadow-lg z-10"
+                              >
+                                <div class="py-1">
+                                  <a href="/admin/user/{{ user.user_id }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
+                                    <i class="fa-solid fa-eye mr-2"></i> ดู
+                                  </a>
+                          
+                                  <a
+                                    href="{{ url_for('delete_user', user_id=user.user_id) }}"
+                                    class="block px-4 py-2 text-sm text-red-400 hover:bg-gray-700"
+                                    onclick="return confirm('ยืนยันการลบรายการนี้?');"
+                                  >
+                                    <i class="fa-solid fa-trash mr-2"></i> ลบ
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+            </table>
+            
+            
+
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Mobile toggle button
+        const mobileToggle = document.getElementById("mobileToggle");
+        const sidebar = document.querySelector(".sidebar");
+        const overlay = document.querySelector(".overlay");
+        const toggleSidebar = document.getElementById("toggleSidebar");
+
+        // Dropdown functionality
+        const dropdowns = document.querySelectorAll(".dropdown");
+
+        // Toggle sidebar on mobile
+        mobileToggle.addEventListener("click", function () {
+          sidebar.classList.toggle("active");
+          overlay.classList.toggle("active");
+        });
+
+        // Close sidebar when clicking the X button
+        toggleSidebar.addEventListener("click", function () {
+          sidebar.classList.remove("active");
+          overlay.classList.remove("active");
+        });
+
+        // Close sidebar when clicking overlay
+        overlay.addEventListener("click", function () {
+          sidebar.classList.remove("active");
+          overlay.classList.remove("active");
+        });
+
+        // Handle dropdown clicks
+        dropdowns.forEach((dropdown) => {
+          const btn = dropdown.querySelector(".dropdown-btn");
+
+          btn.addEventListener("click", function () {
+            dropdown.classList.toggle("active");
+          });
+        });
+
+        // Remove the hover functionality for sidebar collapse
+        // Remove mouseenter/mouseleave event listeners
+
+        // Handle window resize
+        window.addEventListener("resize", function () {
+          if (window.innerWidth >= 768) {
+            sidebar.classList.remove("active");
+            overlay.classList.remove("active");
+          }
+        });
+      });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+          $("#userTable").DataTable({
+
+            order: [],
+            language: {
+              search: "ค้นหา",
+              lengthMenu: "แสดง _MENU_ รายการ",
+              info: "แสดง _START_ ถึง _END_ จาก _TOTAL_ รายการ",
+              infoEmpty: "แสดง 0 ถึง 0 จาก 0 รายการ",
+              infoFiltered: "(กรองจากทั้งหมด _MAX_ รายการ)",
+              zeroRecords: "ไม่พบข้อมูลที่ค้นหา",
+              emptyTable: "ไม่มีข้อมูลในตาราง",
+              paginate: {
+                first: "หน้าแรก",
+                last: "หน้าสุดท้าย",
+                next: "ถัดไป",
+                previous: "ก่อนหน้า",
+              },
+            },
+            responsive: true,
+          });
+          $('.dt-search input[type="search"]').attr("placeholder", "ไอดี ชื่อ แผนก");
+        });
+      </script>
+
+      <script>
+        // Function to toggle action dropdowns in table
+        function toggleActionDropdown(buttonElement) {
+          const allMenus = document.querySelectorAll(".action-menu");
+          allMenus.forEach((menu) => {
+            if (menu !== buttonElement.nextElementSibling) {
+              menu.classList.add("hidden");
+            }
+          });
+  
+          const actionMenu = buttonElement.nextElementSibling;
+          actionMenu.classList.toggle("hidden");
+        }
+  
+        document.addEventListener("click", function (event) {
+          const actionButtons = document.querySelectorAll(".action-dropdown button");
+          const actionMenus = document.querySelectorAll(".action-menu");
+  
+          let clickedInside = false;
+  
+          actionButtons.forEach((btn) => {
+            if (btn.contains(event.target)) {
+              clickedInside = true;
+            }
+          });
+  
+          actionMenus.forEach((menu) => {
+            if (menu.contains(event.target)) {
+              clickedInside = true;
+            }
+          });
+  
+          if (!clickedInside) {
+            actionMenus.forEach((menu) => {
+              menu.classList.add("hidden");
+            });
+          }
+        });
+      </script>
+
+
+      <style>
+        th,td{
+            text-align:  left !important;
+        }
+      </style>
+
+  </body>
+</html>
